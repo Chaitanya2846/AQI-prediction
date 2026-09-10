@@ -1,36 +1,48 @@
+# ====================================================================
+# Python & Machine Learning
+# ====================================================================
 # Virtual Environment
 venv/
-aqi-frontend/node_modules/
+.venv/
+
 # Large Model Files
 *.pkl
+*.h5
+*.pth
+*.onnx
+models/
 aqi_models.pkl
 
 # Python Cache
-__pycache__/
+**/__pycache__/
 *.pyc
+*.pyo
 
-# Local Data (optional but highly recommended)
+# Local Data Sets
 data/
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+*.csv
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# ====================================================================
+# React Frontend (aqi-frontend)
+# ====================================================================
+# Dependencies & Build Output
+aqi-frontend/node_modules/
+aqi-frontend/build/
+aqi-frontend/coverage/
+aqi-frontend/.pnp
+aqi-frontend/.pnp.js
 
-# testing
-/coverage
+# Environment Secrets
+.env
+aqi-frontend/.env
+aqi-frontend/.env.local
+aqi-frontend/.env.development.local
+aqi-frontend/.env.test.local
+aqi-frontend/.env.production.local
 
-# production
-/build
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
+# Logs and System Files
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.DS_Store
