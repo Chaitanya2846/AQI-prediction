@@ -1,114 +1,37 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import './App.css';
 
-function App() {
-  const [prediction, setPrediction] = useState(null);
-  const [error, setError] = useState('');
-  
-  const cities = ['agartala', 'ahmedabad', 'aizawl', 'bengaluru', 'bhopal', 'bhubaneswar', 
-    'chandigarh', 'chennai', 'dehradun', 'delhi', 'gangtok', 'gurugram', 
-    'guwahati', 'hyderabad', 'imphal', 'itanagar', 'jaipur', 'kohima', 
-    'kolkata', 'lucknow', 'mumbai', 'panaji', 'patna', 'raipur', 'ranchi', 
-    'shillong', 'shimla', 'thiruvananthapuram', 'visakhapatnam'];
-  const [formData, setFormData] = useState({
-    City: cities[0], 
-    PM2_5: 45.0, PM10: 90.0, NO2: 15.0, SO2: 20.0, CO: 1.0, O3: 50.0,
-    Temperature: 28.0, Humidity: 60.0, Wind_Speed: 10.0,
-    Crop_Burning: 0, Festival: 0
-  });  
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({ 
-        ...formData, 
-        [name]: type === 'checkbox' ? (checked ? 1 : 0) : (name === 'City' ? value : parseFloat(value)) 
-    });
-  };
+const cities = ['agartala', 'ahmedabad', 'aizawl', 'bengaluru', 'bhopal', 'bhubaneswar', 'chandigarh', 'chennai', 'dehradun', 'delhi', 'gangtok', 'gurugram', 'guwahati', 'hyderabad', 'imphal', 'itanagar', 'jaipur', 'kohima', 'kolkata', 'lucknow', 'mumbai', 'panaji', 'patna', 'raipur', 'ranchi', 'shillong', 'shimla', 'thiruvananthapuram', 'visakhapatnam'];
 
-  const getPrediction = async (e) => {
-    e.preventDefault();
-    setError('');
-    const date = new Date();
-    
-    try {
-      const res = await fetch('http://localhost:8000/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          Year: date.getFullYear(),
-          Month: date.getMonth() + 1,
-          Day: date.getDate()
-        }),
-      });
+const initialForm = { City: cities[0], PM2_5: 45, PM10: 90, NO2: 15, SO2: 20, CO: 1, O3: 50, Temperature: 28, Humidity: 60, Wind_Speed: 10, Crop_Burning: 0, Festival: 0 };
+const pollutantFields = [{ key: 'PM2_5', label: 'PM2.5', unit: 'µg/m³', max: 300 }, { key: 'PM10', label: 'PM10', unit: 'µg/m³', max: 300 }, { key: 'NO2', label: 'NO₂', unit: 'ppb', max: 300 }, { key: 'SO2', label: 'SO₂', unit: 'ppb', max: 300 }, { key: 'CO', label: 'CO', unit: 'mg/m³', max: 300, step: '0.1' }, { key: 'O3', label: 'O₃', unit: 'ppb', max: 300 }];
+const weatherFields = [{ key: 'Temperature', label: 'Temperature', unit: '°C', max: 50, step: '0.5' }, { key: 'Humidity', label: 'Humidity', unit: '%', max: 100 }, { key: 'Wind_Speed', label: 'Wind speed', unit: 'km/h', max: 50 }];
 
-      if (!res.ok) throw new Error('Backend connection failed.');
-      setPrediction(await res.json());
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+function Logo() { return <a className="logo" href="#top" aria-label="AeroSense home"><span className="logo-mark"><span /></span><span>Aero<span>Sense</span></span></a>; }
 
-  return (
-    <div style={{ maxWidth: '700px', margin: '2rem auto', fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ color: '#2c3e50', textAlign: 'center' }}>Advanced AQI Prediction System</h1>
-      
-      <form onSubmit={getPrediction} style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-        
-        <div>
-            <label style={{fontWeight: 'bold'}}>Select City: </label>
-            <select name="City" value={formData.City} onChange={handleChange} style={{ padding: '8px', width: '100%', marginTop: '5px' }}>
-            {cities.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-        </div>
-
-        <h3 style={{ margin: '10px 0 0 0', color: '#7f8c8d', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Pollutant Levels</h3>
-        {['PM2_5', 'PM10', 'NO2', 'SO2', 'CO', 'O3'].map(pollutant => (
-          <div key={pollutant}>
-            <label style={{fontSize: '14px'}}>{pollutant.replace('_', '.')}: <b>{formData[pollutant]}</b></label>
-            <input type="range" name={pollutant} min="0" max="300" step={pollutant === 'CO' ? "0.1" : "1"}
-                value={formData[pollutant]} onChange={handleChange} style={{ width: '100%', cursor: 'pointer' }} />
-          </div>
-        ))}
-
-        <h3 style={{ margin: '10px 0 0 0', color: '#7f8c8d', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Meteorological Data</h3>
-        <div>
-            <label style={{fontSize: '14px'}}>Temperature (°C): <b>{formData.Temperature}</b></label>
-            <input type="range" name="Temperature" min="0" max="50" step="0.5" value={formData.Temperature} onChange={handleChange} style={{ width: '100%' }} />
-        </div>
-        <div>
-            <label style={{fontSize: '14px'}}>Humidity (%): <b>{formData.Humidity}</b></label>
-            <input type="range" name="Humidity" min="0" max="100" step="1" value={formData.Humidity} onChange={handleChange} style={{ width: '100%' }} />
-        </div>
-        <div>
-            <label style={{fontSize: '14px'}}>Wind Speed (km/h): <b>{formData.Wind_Speed}</b></label>
-            <input type="range" name="Wind_Speed" min="0" max="50" step="1" value={formData.Wind_Speed} onChange={handleChange} style={{ width: '100%' }} />
-        </div>
-
-        <h3 style={{ margin: '10px 0 0 0', color: '#7f8c8d', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Environmental Context</h3>
-        <div style={{ display: 'flex', gap: '20px' }}>
-            <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input type="checkbox" name="Crop_Burning" checked={formData.Crop_Burning === 1} onChange={handleChange} />
-                Active Crop Burning
-            </label>
-            <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input type="checkbox" name="Festival" checked={formData.Festival === 1} onChange={handleChange} />
-                Major Festival Period
-            </label>
-        </div>
-
-        <button type="submit" style={{ padding: '15px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '5px', fontSize: '16px', cursor: 'pointer', marginTop: '15px' }}>
-          Predict AQI
-        </button>
-      </form>
-
-      {prediction && (
-        <div style={{ marginTop: '20px', padding: '20px', background: '#ecf0f1', textAlign: 'center', borderRadius: '8px', border: '2px solid #27ae60' }}>
-          <h2 style={{ margin: '0 0 10px 0' }}>Predicted AQI: {prediction.predicted_aqi}</h2>
-          <h3 style={{ margin: '0', color: '#34495e' }}>Category: {prediction.predicted_category}</h3>
-        </div>
-      )}
-    </div>
-  );
+function Header({ onPredict }) {
+  return <header className="site-header"><Logo /><nav><a href="#platform">Platform</a><a href="#method">Method</a><a href="#about">About</a></nav><button className="header-cta" onClick={onPredict}>Open predictor <span>↗</span></button></header>;
 }
+
+function SignalGraphic() { return <div className="signal-graphic" aria-hidden="true"><div className="signal-orbit orbit-one" /><div className="signal-orbit orbit-two" /><div className="signal-core"><span>AQI</span><strong>42</strong><small>GOOD</small></div><span className="graphic-label label-a">PM₂.₅ <b>18.4</b></span><span className="graphic-label label-b">Forecast <b>12h</b></span><span className="graphic-label label-c">Confidence <b>94%</b></span><div className="signal-dot dot-a" /><div className="signal-dot dot-b" /><div className="signal-dot dot-c" /></div>; }
+
+function Landing({ onPredict }) {
+  return <main id="top" className="landing"><section className="hero shell"><div className="hero-copy"><p className="eyebrow"><span className="pulse-dot" /> Environmental intelligence / 01</p><h1>Know the air<br /><em>before</em> it moves.</h1><p className="hero-lede">AeroSense turns atmospheric signals into clear, actionable forecasts for the places that matter to you.</p><div className="hero-actions"><button className="primary-button" onClick={onPredict}>Run a prediction <span>→</span></button><a className="text-link" href="#platform">Explore the platform <span>↓</span></a></div><div className="hero-proof"><div><strong>12.4k</strong><span>signals processed</span></div><div><strong>94%</strong><span>forecast confidence</span></div><div><strong>24/7</strong><span>atmosphere watch</span></div></div></div><div className="hero-visual"><div className="visual-kicker">LIVE ATMOSPHERIC READOUT <span>●</span></div><SignalGraphic /><p className="visual-note">A single view of the invisible.<br />Measured, modelled, made useful.</p></div></section><section id="platform" className="platform-band shell"><div className="section-intro"><p className="eyebrow">The platform / 02</p><h2>From raw air<br />to <em>readable insight.</em></h2></div><div className="feature-list"><article><span className="feature-index">01</span><h3>Predict</h3><p>Model future air quality from pollutants, weather, and local context.</p></article><article><span className="feature-index">02</span><h3>Understand</h3><p>See the signals behind every score, without the black box.</p></article><article><span className="feature-index">03</span><h3>Act</h3><p>Make better calls for commutes, communities, and everyday life.</p></article></div></section><section id="method" className="method shell"><div><p className="eyebrow">A measured approach / 03</p><h2>Atmosphere is<br /><em>data in motion.</em></h2></div><div className="method-copy"><p>We combine pollutant readings with meteorological conditions and environmental context to surface the story in the air.</p><div className="mini-chart"><span /><span /><span /><span /><span /><span /><span /><span /></div><div className="chart-labels"><span>past</span><span>now</span><span>forecast</span></div></div></section><section id="about" className="about-band"><div className="shell about-inner"><p className="eyebrow">Built for clearer decisions</p><h2>Better air starts<br />with <em>better awareness.</em></h2><button className="primary-button" onClick={onPredict}>Try AeroSense <span>→</span></button></div></section><footer className="site-footer shell"><Logo /><span>© 2026 AeroSense / atmospheric intelligence</span><span>Made for the air we share.</span></footer></main>;
+}
+
+function RangeField({ field, value, onChange }) { return <div className="range-field"><div className="field-top"><label htmlFor={field.key}>{field.label}</label><output htmlFor={field.key}>{value}<small>{field.unit}</small></output></div><input id={field.key} type="range" name={field.key} min="0" max={field.max} step={field.step || '1'} value={value} onChange={onChange} style={{ '--range-progress': `${(value / field.max) * 100}%` }} /></div>; }
+
+function Gauge({ value }) { const angle = Math.min(180, (Math.max(0, value) / 300) * 180); return <div className="gauge"><div className="gauge-arc" /><div className="gauge-needle" style={{ transform: `rotate(${angle - 90}deg)` }} /><div className="gauge-center"><strong>{value}</strong><span>AQI INDEX</span></div><div className="gauge-scale"><span>0</span><span>100</span><span>200</span><span>300+</span></div></div>; }
+
+function Prediction({ onBack }) {
+  const [formData, setFormData] = useState(initialForm); const [prediction, setPrediction] = useState(null); const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
+  const handleChange = (e) => { const { name, value, type, checked } = e.target; setFormData({ ...formData, [name]: type === 'checkbox' ? (checked ? 1 : 0) : name === 'City' ? value : parseFloat(value) }); setPrediction(null); };
+  const getPrediction = async (e) => { e.preventDefault(); setError(''); setLoading(true); const date = new Date(); try { const res = await fetch('http://localhost:8000/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...formData, Year: date.getFullYear(), Month: date.getMonth() + 1, Day: date.getDate() }) }); if (!res.ok) throw new Error('Backend connection failed.'); setPrediction(await res.json()); } catch (err) { setError(err.message); } finally { setLoading(false); } };
+  const score = prediction ? Number(prediction.predicted_aqi) : null; const status = prediction?.predicted_category || (score !== null ? 'Measured' : 'Awaiting signal');
+  const summary = useMemo(() => score === null ? 'Tune the atmospheric inputs to generate a localized forecast.' : score <= 50 ? 'Air quality is in a good range. Outdoor activity is generally safe.' : score <= 100 ? 'Sensitive groups may want to monitor prolonged outdoor exposure.' : 'Consider reducing extended outdoor exposure and monitoring conditions.', [score]);
+  return <main className="predict-page"><div className="predict-shell"><div className="predict-top"><button className="back-link" onClick={onBack}>← Back to AeroSense</button><span className="status-live"><span className="pulse-dot" /> Prediction engine online</span></div><div className="predict-heading"><div><p className="eyebrow">AeroSense / prediction engine</p><h1>Read the air<br /><em>where you are.</em></h1></div><p>Set the conditions. We&apos;ll translate the atmosphere into a score you can use.</p></div><div className="predict-grid"><form className="input-panel" onSubmit={getPrediction}><div className="panel-heading"><div><span className="panel-number">01</span><h2>Atmospheric inputs</h2></div><span className="required-note">All fields live</span></div><div className="field-group"><label className="select-label" htmlFor="City">Location</label><select id="City" name="City" value={formData.City} onChange={handleChange}>{cities.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}</select></div><div className="field-group"><div className="group-label"><span>Pollutant levels</span><small>µg/m³ unless noted</small></div>{pollutantFields.map(field => <RangeField key={field.key} field={field} value={formData[field.key]} onChange={handleChange} />)}</div><div className="field-group"><div className="group-label"><span>Meteorological data</span><small>current conditions</small></div>{weatherFields.map(field => <RangeField key={field.key} field={field} value={formData[field.key]} onChange={handleChange} />)}</div><div className="field-group"><div className="group-label"><span>Environmental context</span><small>optional signals</small></div><div className="toggle-row"><label><input type="checkbox" name="Crop_Burning" checked={formData.Crop_Burning === 1} onChange={handleChange} /><span className="toggle" />Crop burning</label><label><input type="checkbox" name="Festival" checked={formData.Festival === 1} onChange={handleChange} /><span className="toggle" />Festival period</label></div></div><button className="submit-button" type="submit" disabled={loading}>{loading ? 'Analysing atmosphere…' : 'Generate prediction'} <span>{loading ? '◌' : '→'}</span></button></form><aside className={`result-panel ${prediction ? 'has-result' : ''}`}><div className="panel-heading"><div><span className="panel-number">02</span><h2>Signal report</h2></div><span className="report-id">LIVE / 001</span></div>{prediction ? <><div className="result-location"><span>Predicted conditions for</span><strong>{formData.City}</strong></div><Gauge value={score} /><div className="result-category"><span className="category-dot" /><div><small>Classification</small><strong>{status}</strong></div></div><p className="result-summary">{summary}</p></> : <div className="empty-result"><div className="empty-rings"><span /><span /><span /></div><p>Your atmospheric readout<br />will appear here.</p><span>Adjust inputs and run a prediction</span></div>}{error && <div className="error-message" role="alert">{error}</div>}<div className="scale"><span><i className="good" /> Good</span><span><i className="moderate" /> Moderate</span><span><i className="poor" /> Poor</span><span><i className="severe" /> Severe</span></div></aside></div><p className="predict-footnote">AeroSense predictions are modelled estimates, not a replacement for official local guidance.</p></div></main>;
+}
+
+function App() { const [page, setPage] = useState(window.location.hash === '#predict' ? 'predict' : 'home'); const goPredict = () => { window.location.hash = 'predict'; setPage('predict'); window.scrollTo(0, 0); }; const goHome = () => { window.location.hash = 'top'; setPage('home'); window.scrollTo(0, 0); }; return page === 'predict' ? <><div className="predict-nav"><Logo /><button onClick={goHome}>Platform overview <span>↗</span></button></div><Prediction onBack={goHome} /></> : <><Header onPredict={goPredict} /><Landing onPredict={goPredict} /></>; }
 
 export default App;
