@@ -14,7 +14,18 @@ The project needs Python 3.11+, Node.js/npm, an OpenWeatherMap API key, and the 
    python -m pip install -r requirements.txt
    ```
 
-2. Copy `.env.example` to `.env` and add your key as `OPENWEATHER_API_KEY=your_key`. Keep `.env` private.
+2. Create a `.env` file in the project root and open it:
+
+   ```powershell
+   New-Item .env -ItemType File
+   notepad .env
+   ```
+
+   Add your OpenWeatherMap key, save the file, and keep it private:
+
+   ```text
+   OPENWEATHER_API_KEY=your_key
+   ```
 3. Download `INDIA_AQI_COMPLETE_20251126.csv` from the [Kaggle dataset](https://www.kaggle.com/datasets/bhautikvekariya21/air-quality-dataset-indian-cities-2022-2025), then train:
 
    ```powershell
